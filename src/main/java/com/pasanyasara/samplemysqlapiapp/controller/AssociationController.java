@@ -66,15 +66,18 @@ public class AssociationController {
     @GetMapping("/associations/manager/{cnieManager}")
     public @ResponseBody ArrayList<HashMap<String,Object>> getAssociationsByCnieManager(@PathVariable String cnieManager)
     {
-        Map<String, Object> associationMap = new HashMap<String,Object>();
+        Map<String, Object> associationMap ;
         ArrayList<HashMap<String,Object>> associationsList = new ArrayList<HashMap<String,Object>>();
 
         for(Association association : associationService.getAllAssociationsByCnieManager(cnieManager))
         {
+            associationMap = new HashMap<String,Object>();
+            //System.out.println(association.getCNIE_Collab());
             associationMap.put("cnie_Collab",association.getCNIE_Collab());
             associationMap.put("email_Collab",association.getEmail_Collab());
             associationMap.put("association_Status",association.getAssociation_Status());
             associationsList.add((HashMap<String, Object>) associationMap);
+
         }
 
         return associationsList;
