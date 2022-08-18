@@ -1,5 +1,6 @@
 package com.pasanyasara.samplemysqlapiapp.controller;
 
+import com.pasanyasara.samplemysqlapiapp.enums.AssociationStatus;
 import com.pasanyasara.samplemysqlapiapp.model.Association;
 import com.pasanyasara.samplemysqlapiapp.repository.AssociationRepository;
 import com.pasanyasara.samplemysqlapiapp.service.AssociationService;
@@ -10,9 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 @CrossOrigin
@@ -25,7 +24,7 @@ public class AssociationController {
     @Autowired
     private AssociationService associationService;
 
-    @GetMapping("/associations")
+    @GetMapping
     public @ResponseBody Iterable<Association> getAllAssociations(){
 //        Iterable<Association> iterable = associationRepository.findAll();
 //        for(Association i : iterable)
@@ -34,7 +33,8 @@ public class AssociationController {
 //        }
         //Association association = associationService.getAllAssociationsByCnieManager("PA173101").get(0);
         //System.out.println(associationService.getAllAssociationsByCnieManager("PA173101").size());
-        return associationRepository.findAll();
+        System.out.println(AssociationStatus.ACTIVE.getAssociationStatus());
+        return associationService.getAllAssociations();
     }
 
 //    @PostMapping("/associations/add")
@@ -63,41 +63,100 @@ public class AssociationController {
 //
 //    }
 
-    @GetMapping("/associations/manager/{cnieManager}")
-    public @ResponseBody ArrayList<HashMap<String,Object>> getAssociationsByCnieManager(@PathVariable String cnieManager)
+    @GetMapping("/manager/{cnieManager}")
+    public @ResponseBody ResponseEntity<ArrayList<Association>> getAssociationsByCnieManager(@PathVariable String cnieManager)
     {
-        Map<String, Object> associationMap ;
-        ArrayList<HashMap<String,Object>> associationsList = new ArrayList<HashMap<String,Object>>();
+        ArrayList<Association> associationsList = new ArrayList<Association>();
 
         for(Association association : associationService.getAllAssociationsByCnieManager(cnieManager))
         {
-            associationMap = new HashMap<String,Object>();
-            //System.out.println(association.getCNIE_Collab());
-            associationMap.put("cnie_Collab",association.getCNIE_Collab());
-            associationMap.put("email_Collab",association.getEmail_Collab());
-            associationMap.put("association_Status",association.getAssociation_Status());
-            associationsList.add((HashMap<String, Object>) associationMap);
-
+            associationsList.add(association);
         }
 
-        return associationsList;
+        if(associationsList.isEmpty())
+        {
+            return new ResponseEntity<ArrayList<Association>>(associationsList,HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<ArrayList<Association>>(associationsList,HttpStatus.OK);
     }
+
+//    @GetMapping("/manager/{cnieManager}")
+//    public @ResponseBody ResponseEntity<ArrayList<HashMap<String,Object>>> getAssociationsByCnieManager(@PathVariable String cnieManager)
+//    {
+//        Map<String, Object> associationMap ;
+//        ArrayList<HashMap<String,Object>> associationsList = new ArrayList<HashMap<String,Object>>();
+//
+//        for(Association association : associationService.getAllAssociationsByCnieManager(cnieManager))
+//        {
+//            associationMap = new HashMap<String,Object>();
+//            //System.out.println(association.getCNIE_Collab());
+//            associationMap.put(AssociationConstant.CNIE_COLLAB,association.getCnieCollab());
+//            associationMap.put(AssociationConstant.EMAIL_COLLAB,association.getEmailCollab());
+//            associationMap.put(AssociationConstant.ASSOCIATION_STATUS,association.getAssociationStatus());
+//            associationsList.add((HashMap<String, Object>) associationMap);
+//
+//        }
+//        if(associationsList.isEmpty())
+//        {
+//            return new ResponseEntity<ArrayList<HashMap<String,Object>>>(associationsList,HttpStatus.NOT_FOUND);
+//        }
+//
+//
+//        return new ResponseEntity<ArrayList<HashMap<String,Object>>>(associationsList,HttpStatus.OK);
+//    }
+
+
+
+
+
+//    @PostMapping("/manager/{cnieManager}")
+//    public ResponseEntity<String> disableAssociations(@RequestBody ArrayList<Association> associationList, @PathVariable String cnieManager){
+//        int cnieCollabCount=0;
+//        for(Association association : associationList)
+//        {
+//            cnieCollabCount = cnieCollabCount + associationService.disableAssociationsByCnieManagerAndCnieCollab(cnieManager,association.getCnieCollab());
+//        }
+//        return new ResponseEntity<String>(cnieCollabCount+" Associations disabled",HttpStatus.OK);
+//    }
+
+    @PostMapping("/manager/{cnieManager}")
+    public ResponseEntity<String> disableAssociations(@RequestBody ArrayList<Association> associationList, @PathVariable String cnieManager){
+        int cnieCollabCount=0;
+
+        for(Association association : associationList)
+        {
+            cnieCollabCount += associationService.disableAssociationsByCnieManagerAndCnieCollab(cnieManager,association.getCnieCollab());
+        }
+
+        return new ResponseEntity<String>(cnieCollabCount+" Associations disabled",HttpStatus.OK);
+    }
+
+//    @PostMapping("/manager/{cnieManager}")
+//    public ResponseEntity<String> disableAssociations(@RequestBody ArrayList<HashMap<String,String>> associationList, @PathVariable String cnieManager){
+//        int cnieCollabCount=0;
+//        for(HashMap<String,String> associationHashMap : associationList)
+//        {
+//            cnieCollabCount = cnieCollabCount + associationService.disableAssociationsByCnieManagerAndCnieCollab(cnieManager,associationHashMap.get(AssociationConstant.CNIE_COLLAB));
+//        }
+//        return new ResponseEntity<String>(cnieCollabCount+" Associations disabled",HttpStatus.OK);
+//    }
 
 
     @GetMapping("/associations/{CnieCollab}")
-    public ResponseEntity<String> configureAssociationsByCnieCollab(@PathVariable String CnieCollab)
+    public ResponseEntity<String> configureAssociationsByCnieCollab(@PathVariable String cnieCollab)
     {
-        if(associationService.getAssociationAvailabilityCountByCnieCollab(CnieCollab)==0)
+        if(!associationService.isAssociationAvailableForCnieCollab(cnieCollab))
         {
             return new ResponseEntity<String>(HttpStatus.NOT_FOUND);
         }
-        if(associationService.getAssociationStatusByCnieCollab(CnieCollab).equals("Active"))
+        if(associationService.getAssociationStatusByCnieCollab(cnieCollab).equals(AssociationStatus.ACTIVE.getAssociationStatus()))
         {
             return new ResponseEntity<String>(HttpStatus.OK);
         }
         else{
 
-            return new ResponseEntity<String>(associationService.disableAssociationsByCNIEManager(associationService.getCnieManagerByCnieCollab(CnieCollab))
+            return new ResponseEntity<String>(associationService.disableAssociationsByCnieManager(associationService.getCnieManagerByCnieCollab(cnieCollab))
                     +" associations are Disabled",HttpStatus.UNAUTHORIZED);
         }
 
@@ -113,16 +172,16 @@ public class AssociationController {
 
     @PutMapping ("/associations/manager/disable/{cnieManager}")
     public ResponseEntity<String> disableAssociationsByCnieManager(@PathVariable String cnieManager){
-        return new ResponseEntity<String>(associationService.disableAssociationsByCNIEManager(cnieManager)+" associations disabled.", HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<String>(associationService.disableAssociationsByCnieManager(cnieManager)+" associations disabled.", HttpStatus.UNAUTHORIZED);
     }
 
-    @PutMapping ("/associations/manager/activate/{cnieManager}")
-    public ResponseEntity<String> activateAssociationsByCnieManager(@PathVariable String cnieManager){
-        return new ResponseEntity<String>(associationRepository.activateAssociationsByCNIEManager(cnieManager)+" associations activated.", HttpStatus.OK);
-    }
+//    @PutMapping ("/associations/manager/activate/{cnieManager}")
+//    public ResponseEntity<String> activateAssociationsByCnieManager(@PathVariable String cnieManager){
+//        return new ResponseEntity<String>(associationRepository.activateAssociationsByCNIEManager(cnieManager)+" associations activated.", HttpStatus.OK);
+//    }
 
     @PutMapping("/associations/cniecollab/disable/{cnieCollab}")
     public ResponseEntity<String> disableAssociationsByCnieCollab(@PathVariable String cnieCollab){
-        return new ResponseEntity<String>(associationService.disableAssociationsByCNIECollab(cnieCollab)+" associations disabled.", HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<String>(associationService.disableAssociationsByCnieCollab(cnieCollab)+" associations disabled.", HttpStatus.UNAUTHORIZED);
     }
 }

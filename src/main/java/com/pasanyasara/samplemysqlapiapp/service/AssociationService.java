@@ -6,21 +6,30 @@ import com.pasanyasara.samplemysqlapiapp.model.Association;
 import java.util.List;
 
 public interface AssociationService {
+    Iterable getAllAssociations();
 
-    String addNewAssociation(String CNIEManager, String emailManager, String emailCollab,
+    String addAssociation(String CNIEManager, String emailManager, String emailCollab,
                              String qualificationColab, String compDenomination, String rcNum, String jurisdictionId);
 
     List<Association> getAllAssociationsByCnieManager(String CnieManager);
 
-    String getAssociationStatusByCnieCollab(String CnieCollab);
-
-    Integer getAssociationAvailabilityCountByCnieCollab(String CnieCollab);
-
     String getCnieManagerByCnieCollab(String CnieCollab);
 
-    Integer disableAssociationsByCNIEManager(String cnieManager);
+    boolean isAssociationAvailableForCnieCollab(String cnieCollab);
 
-    Integer disableAssociationsByCNIECollab(String cnieManager);
+    String getAssociationStatusByCnieCollab(String cnieCollab);
+
+    String expireAssociationsByEmailCollabAndEmailManager(String emailCollab, String emailManager);
+
+
+
+
+
+    Integer disableAssociationsByCnieManager(String cnieManager);
+
+    Integer disableAssociationsByCnieCollab(String cnieManager);
+
+    Integer disableAssociationsByCnieManagerAndCnieCollab(String cnieManager, String cnieCollab);
 
 //    Association getAssociationsByCnieManager(String cnieManager);
 

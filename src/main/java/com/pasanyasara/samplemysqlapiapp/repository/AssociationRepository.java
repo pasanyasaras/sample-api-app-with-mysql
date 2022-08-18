@@ -1,45 +1,43 @@
 package com.pasanyasara.samplemysqlapiapp.repository;
 
 import com.pasanyasara.samplemysqlapiapp.model.Association;
+import com.pasanyasara.samplemysqlapiapp.response.AssociationCustomResponse;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-public interface AssociationRepository extends CrudRepository<Association,Integer> {
+public interface AssociationRepository extends JpaRepository<Association,Integer> {
 
-    @Query("SELECT a FROM Association a WHERE a.CNIE_Collab=?1")
-    List<Association> sqlAssociationByCnie(String cnie_Collab);
+    List<Association> findByCnieManager(String cnieManager);
 
-    @Query("SELECT a FROM Association a WHERE a.CNIE_Manager=?1")
-    List<Association> sqlFetchAssociationsByCNIEManager(String cnieManager);
+    //List<AssociationCustomResponse> findByCnieManager(String cnieManager);
 
-//    @Query("SELECT a FROM Association a WHERE a.CNIE_Manager=?1")
-//    Association getAssociationsByCnieManager(String cnieManager);   /********/
+    Optional<Association> findByCnieCollab(String cnieCollab);
 
-    @Query("SELECT a.Association_Status FROM Association a WHERE a.CNIE_Collab=?1 ")
-    String checkAssociationStatus(String CnieCollab);
+    Optional<Association> findByCnieManagerAndCnieCollab(String cnieManager, String cnieCollab);
 
-    @Query("SELECT COUNT(a) FROM Association a WHERE a.CNIE_Collab=?1")
-    Integer checkAssociationAvailabilityByCnieCollab(String CnieCollab);
+    Optional<Association> findByEmailCollabAndEmailManager(String emailCollab, String emailManager);
 
-    @Query("SELECT a.CNIE_Manager FROM Association a WHERE a.CNIE_Collab=?1 ")
-    String getCnieManagerByCnieCollab(String CnieCollab);
+
 
     @Transactional
     @Modifying
-    @Query("UPDATE Association a SET a.Association_Status='Disabled' WHERE a.CNIE_Manager=?1")
-    Integer disableAssociationsByCNIEManager(String cnieManager);
-
-    @Transactional
-    @Modifying
-    @Query("UPDATE Association a SET a.Association_Status='Active' WHERE a.CNIE_Manager=?1")
+    @Query("UPDATE Association a SET a.associationStatus='Active' WHERE a.cnieManager=?1")
     Integer activateAssociationsByCNIEManager(String cnieManager);
 
-    @Transactional
-    @Modifying
-    @Query("UPDATE Association a SET a.Association_Status='Disabled' WHERE a.CNIE_Collab=?1")
-    Integer disableAssociationsByCNIECollab(String cnieManager);
+//    @Transactional
+//    @Modifying
+//    @Query("UPDATE Association a SET a.associationStatus='Disabled' WHERE a.cnieCollab=?1")
+//    Integer disableAssociationsByCnieCollab(String cnieCollab);
+//
+//    @Transactional
+//    @Modifying
+//    @Query("UPDATE Association a SET a.associationStatus='Disabled' WHERE a.cnieManager=?1 AND a.cnieCollab=?2")
+//    Integer disableAssociationsByCnieManagerAndCnieCollab(String cnieManager, String cnieCollab);
 }

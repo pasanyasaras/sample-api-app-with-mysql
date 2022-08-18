@@ -1,104 +1,161 @@
 package com.pasanyasara.samplemysqlapiapp.service.impl;
 
-import com.google.gson.JsonObject;
-import com.pasanyasara.samplemysqlapiapp.constant.ScimConstant;
+import com.pasanyasara.samplemysqlapiapp.enums.AssociationStatus;
 import com.pasanyasara.samplemysqlapiapp.model.Association;
 import com.pasanyasara.samplemysqlapiapp.repository.AssociationRepository;
 import com.pasanyasara.samplemysqlapiapp.service.AssociationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AssociationServiceImpl implements AssociationService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AssociationServiceImpl.class);
     @Autowired
     private AssociationRepository associationRepository;
 
     @Value("${associations.base.url}")
     private String associationsBaseUrl;
 
-    private Association setAssociationValues(JsonObject jsonObject) throws ParseException {
-        Association association = new Association();
 
-        Integer id = Integer.parseInt(jsonObject.get(ScimConstant.ID).getAsString());
-        String rc_num = jsonObject.get(ScimConstant.RC_NUM).getAsString();
-        String cnie_manager = jsonObject.get(ScimConstant.CNIE_MANAGER).getAsString();
-        String email_manager = jsonObject.get(ScimConstant.EMAIL_MANAGER).getAsString();
-        String email_collab = jsonObject.get(ScimConstant.EMAIL_COLLAB).getAsString();
-        String cnie_collab = jsonObject.get(ScimConstant.CNIE_COLLAB).getAsString();
-        String firstNameCollab = jsonObject.get(ScimConstant.FIRST_NAME_COLLAB).getAsString();
-        String lastNameCollab = jsonObject.get(ScimConstant.LAST_NAME_COLLAB).getAsString();
-        String qualificationCollab = jsonObject.get(ScimConstant.QUALIFICATION_COLLAB).getAsString();
-        String associationReqDate = jsonObject.get(ScimConstant.ASSOCIATION_REQ_DATE).getAsString();
-        String associationStatus = jsonObject.get(ScimConstant.ASSOCIATION_STATUS).getAsString();
-        String compDenomination = jsonObject.get(ScimConstant.COMP_DENOMINATION).getAsString();
-        String jurisdiction_id = jsonObject.get(ScimConstant.JURISDICTION_ID).getAsString();
-
-        association.setId(id);
-        association.setRC_Num(rc_num);
-        association.setCNIE_Manager(cnie_manager);
-        association.setEmail_Manager(email_manager);
-        association.setEmail_Collab(email_collab);
-        association.setCNIE_Collab(cnie_collab);
-        association.setFirstName_Collab(firstNameCollab);
-        association.setLastName_Collab(lastNameCollab);
-        association.setQualification_Collab(qualificationCollab);
-        Date associationDate = new SimpleDateFormat("yyyy-MM-dd").parse(associationReqDate.substring(0,10));
-        association.setAssociation_Req_Date(associationDate);
-        association.setAssociation_Status(associationStatus);
-        association.setComp_Denomination(compDenomination);
-        association.setJurisdiction_id(jurisdiction_id);
-
-
-        return association;
+    @Override
+    public Iterable getAllAssociations() {
+        return associationRepository.findAll();
     }
 
     @Override
-    public String addNewAssociation(String CNIEManager, String emailManager, String emailCollab,
+    public String addAssociation(String cnieManager, String emailManager, String emailCollab,
                                     String qualificationColab, String compDenomination, String rcNum, String jurisdictionId){
         Association association = new Association();
-        association.setCNIE_Manager(CNIEManager);
-        association.setEmail_Manager(emailManager);
-        association.setEmail_Collab(emailCollab);
-        association.setQualification_Collab(qualificationColab);
+        association.setCnieManager(cnieManager);
+        association.setEmailManager(emailManager);
+        association.setEmailCollab(emailCollab);
+        association.setQualificationCollab(qualificationColab);
         Date date = new Date();
-        association.setAssociation_Req_Date(date);
-        association.setAssociation_Status("Pending");
-        association.setComp_Denomination(compDenomination);
-        association.setRC_Num(rcNum);
-        association.setJurisdiction_id(jurisdictionId);
+        association.setAssociationReqDate(date);
+        association.setAssociationStatus(AssociationStatus.PENDING.getAssociationStatus());
+        association.setCompDenomination(compDenomination);
+        association.setRcNum(rcNum);
+        association.setJurisdictionId(jurisdictionId);
+        association.setCnieCollab("");
+        association.setFirstNameCollab("");
+        association.setLastNameCollab("");
         associationRepository.save(association);
 
         return "Saved";
     }
 
-    public List<Association> getAllAssociationsByCnieManager(String CnieManager){
-        return associationRepository.sqlFetchAssociationsByCNIEManager(CnieManager);
+    public List<Association> getAllAssociationsByCnieManager(String cnieManager){
+        return associationRepository.findByCnieManager(cnieManager);
     }
 
-    public String getAssociationStatusByCnieCollab(String CnieCollab){
-        return associationRepository.checkAssociationStatus(CnieCollab);
+
+
+    public String getCnieManagerByCnieCollab(String cnieCollab){
+        Optional<Association> optionalAssociation = associationRepository.findByCnieCollab(cnieCollab);
+        Association association = optionalAssociation.get();
+
+        return association.getCnieManager();
     }
 
-    public Integer getAssociationAvailabilityCountByCnieCollab(String CnieCollab){
-        return associationRepository.checkAssociationAvailabilityByCnieCollab(CnieCollab);
+    public String getAssociationStatusByCnieCollab(String cnieCollab){
+        Optional<Association> optionalAssociation = associationRepository.findByCnieCollab(cnieCollab);
+        Association association = optionalAssociation.get();
+        return association.getAssociationStatus();
     }
 
-    public String getCnieManagerByCnieCollab(String CnieCollab){
-        return associationRepository.getCnieManagerByCnieCollab(CnieCollab);
+    @Override
+    public String expireAssociationsByEmailCollabAndEmailManager(String emailCollab, String emailManager) {
+        Optional<Association> optionalAssociation = associationRepository.findByEmailCollabAndEmailManager(emailCollab,emailManager);
+        if(optionalAssociation.isPresent())
+        {
+            Association association = optionalAssociation.get();
+            association.setAssociationStatus(AssociationStatus.EXPIRED.getAssociationStatus());
+            associationRepository.save(association);
+            return "Association is disabled";
+        }
+        else
+        {
+            return "No association found to expire";
+        }
+
     }
 
-    public Integer disableAssociationsByCNIEManager(String cnieManager){
-        return associationRepository.disableAssociationsByCNIEManager(cnieManager);
+
+    public boolean isAssociationAvailableForCnieCollab(String cnieCollab)
+    {
+        Optional<Association> optionalAssociation = associationRepository.findByCnieCollab(cnieCollab);
+        if(optionalAssociation.isPresent())
+        {
+            LOG.info("Association is available for {}",cnieCollab);
+            return true;
+        }
+        else{
+            LOG.info("No association is available for {}",cnieCollab);
+            return false;
+        }
+
+
     }
 
-    public Integer disableAssociationsByCNIECollab(String cnieManager){
-        return associationRepository.disableAssociationsByCNIECollab(cnieManager);
+
+
+    public Integer disableAssociationsByCnieManager(String cnieManager){
+        int associationsCount=0;
+        List<Association> associationList = associationRepository.findByCnieManager(cnieManager);
+        for(Association association : associationList)
+        {
+            association.setAssociationStatus(AssociationStatus.DISABLED.getAssociationStatus());
+            associationRepository.save(association);
+            associationsCount++;
+        }
+        return associationsCount;
+    }
+
+    public Integer disableAssociationsByCnieCollab(String cnieCollab){
+        int associationsCount=0;
+        Optional<Association> optionalAssociation = associationRepository.findByCnieCollab(cnieCollab);
+        if(optionalAssociation.isPresent())
+        {
+            Association association = optionalAssociation.get();
+            association.setAssociationStatus(AssociationStatus.DISABLED.getAssociationStatus());
+            associationRepository.save(association);
+            associationsCount++;
+            LOG.info("Association is disabled: {}",cnieCollab);
+        }
+        else
+        {
+            LOG.info("No association found for {}",cnieCollab);
+        }
+        return associationsCount;
+    }
+
+    @Override
+    public Integer disableAssociationsByCnieManagerAndCnieCollab(String cnieManager, String cnieCollab) {
+        int associationsCount=0;
+
+        Optional<Association> optionalAssociation = associationRepository.findByCnieManagerAndCnieCollab(cnieManager,cnieCollab);
+        if(optionalAssociation.isPresent())
+        {
+            Association association = optionalAssociation.get();
+            association.setAssociationStatus(AssociationStatus.DISABLED.getAssociationStatus());
+            associationRepository.save(association);
+            associationsCount++;
+            LOG.info("Association is disabled: cnieManager: {} || cnieCollab: {}",cnieManager,cnieCollab);
+
+        }
+        else
+        {
+            LOG.info("No association found: cnieManager: {} || cnieCollab: {}",cnieManager,cnieCollab);
+        }
+        return associationsCount;
     }
 
 //    @Override

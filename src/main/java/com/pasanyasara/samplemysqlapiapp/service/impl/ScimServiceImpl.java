@@ -1,8 +1,6 @@
 package com.pasanyasara.samplemysqlapiapp.service.impl;
 
-import com.google.gson.JsonObject;
-import com.pasanyasara.samplemysqlapiapp.constant.ScimConstant;
-import com.pasanyasara.samplemysqlapiapp.model.Association;
+
 import com.pasanyasara.samplemysqlapiapp.repository.AssociationRepository;
 import com.pasanyasara.samplemysqlapiapp.service.ScimService;
 import com.pasanyasara.samplemysqlapiapp.utill.HttpClient;
