@@ -31,6 +31,9 @@ public interface AssociationService {
 
     Integer disableAssociationsByCnieManagerAndCnieCollab(String cnieManager, String cnieCollab);
 
+    void updateAssociation(String emailManager, String emailCollab, String cnieCollab, String firstNameCollab, String lastNameCollab);
+
+    boolean isAssociationAvailableByEmailManagerAndEmailCollab(String emailManager, String emailCollab);
 //    Association getAssociationsByCnieManager(String cnieManager);
 
 }

@@ -1,14 +1,11 @@
 package com.pasanyasara.samplemysqlapiapp.repository;
 
 import com.pasanyasara.samplemysqlapiapp.model.Association;
-import com.pasanyasara.samplemysqlapiapp.response.AssociationCustomResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +18,8 @@ public interface AssociationRepository extends JpaRepository<Association,Integer
     Optional<Association> findByCnieCollab(String cnieCollab);
 
     Optional<Association> findByCnieManagerAndCnieCollab(String cnieManager, String cnieCollab);
+
+    Optional<Association> findByEmailManagerAndEmailCollab(String emailManager, String emailCollab);
 
     Optional<Association> findByEmailCollabAndEmailManager(String emailCollab, String emailManager);
 

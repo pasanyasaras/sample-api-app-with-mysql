@@ -158,6 +158,36 @@ public class AssociationServiceImpl implements AssociationService {
         return associationsCount;
     }
 
+    @Override
+    public void updateAssociation(String emailManager, String emailCollab, String cnieCollab, String firstNameCollab, String lastNameCollab) {
+        Optional<Association> optionalAssociation = associationRepository.findByEmailCollabAndEmailManager(emailManager, emailCollab);
+        if(optionalAssociation.isPresent())
+        {
+            Association association = optionalAssociation.get();
+            association.setCnieCollab(cnieCollab);
+            association.setFirstNameCollab(firstNameCollab);
+            association.setLastNameCollab(lastNameCollab);
+            associationRepository.save(association);
+            LOG.info("Association is updated: emailManager: {} || emailCollab: {}",emailManager,emailCollab);
+        }
+        else{
+            LOG.info("No association updated: emailManager: {} || emailCollab: {}",emailManager,emailCollab);
+        }
+
+    }
+
+    @Override
+    public boolean isAssociationAvailableByEmailManagerAndEmailCollab(String emailManager, String emailCollab) {
+        Optional<Association>  optionalAssociation= associationRepository.findByEmailManagerAndEmailCollab(emailManager,emailCollab);
+        if(optionalAssociation.isPresent())
+        {
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
 //    @Override
 //    public Association getAssociationsByCnieManager(String cnieManager) {
 //        return associationRepository.getAssociationsByCnieManager(cnieManager);
